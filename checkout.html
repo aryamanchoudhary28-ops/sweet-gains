@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/img/laddu-pb.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <title>Checkout | Sweet Gains</title>
+</head>
+<body data-page="checkout">
+<main>
+  <nav class="crumbs label"><a href="index.html">Home</a><span>/</span><a href="shop.html">Shop</a><span>/</span><span>Checkout</span></nav>
+  <div class="checkout">
+    <form id="checkout-form" novalidate>
+      <div class="co-head"><h1>Checkout</h1><p>Three steps and you're done.</p></div>
+
+      <div class="fieldset">
+        <h3>Contact <span>01</span></h3>
+        <div class="fields">
+          <label class="field">First name<input name="fname" required autocomplete="given-name"></label>
+          <label class="field">Last name<input name="lname" required autocomplete="family-name"></label>
+          <label class="field">Email<input name="email" type="email" required autocomplete="email"></label>
+          <label class="field">Phone<input name="phone" type="tel" required pattern="[0-9 +]{10,14}" autocomplete="tel" placeholder="+91"></label>
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <h3>Delivery <span>02</span></h3>
+        <div class="fields">
+          <label class="field full">Address<input name="address" required autocomplete="street-address" placeholder="Flat, building, street"></label>
+          <label class="field">City<input name="city" required autocomplete="address-level2"></label>
+          <label class="field">PIN code<input name="pin" required pattern="[0-9]{6}" inputmode="numeric" autocomplete="postal-code"></label>
+          <label class="field full">State
+            <select name="state" required>
+              <option value="">Select state</option>
+              <option>Delhi</option><option>Gujarat</option><option>Karnataka</option><option>Kerala</option>
+              <option>Maharashtra</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option>
+              <option>Telangana</option><option>Uttar Pradesh</option><option>West Bengal</option><option>Other</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <h3>Payment <span>03</span></h3>
+        <label class="pay-opt is-on"><input type="radio" name="pay" value="upi" checked><div><b>UPI</b><small>GPay, PhonePe, Paytm</small></div></label>
+        <label class="pay-opt"><input type="radio" name="pay" value="card"><div><b>Credit or debit card</b><small>Visa, Mastercard, RuPay</small></div></label>
+        <label class="pay-opt"><input type="radio" name="pay" value="cod"><div><b>Cash on delivery</b><small>Pay when it arrives</small></div></label>
+        <p class="demo-note label">Demo store for a college project. No real payment is collected.</p>
+      </div>
+
+      <div class="co-submit"><button id="place" class="btn btn--red btn--block" type="submit">Place order</button></div>
+    </form>
+    <aside class="summary" id="summary"></aside>
+  </div>
+</main>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

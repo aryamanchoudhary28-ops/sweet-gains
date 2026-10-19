@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/img/laddu-pb.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <title>Shop | Sweet Gains</title>
+</head>
+<body data-page="shop">
+<main>
+  <section class="page-head">
+    <h1>Shop</h1>
+    <p>Four flavours, one variety can and a bundle. Everything ships within 24 hours.</p>
+  </section>
+  <div class="toolbar">
+    <div class="chips" role="group" aria-label="Filter products">
+      <button data-c="all">All</button>
+      <button data-c="flavours">Flavours</button>
+      <button data-c="cans">Variety can</button>
+      <button data-c="bundles">Bundles</button>
+    </div>
+    <div class="toolbar__right">
+      <span class="shop-count label"></span>
+      <select id="sort" aria-label="Sort products">
+        <option value="featured">Sort: Featured</option>
+        <option value="rating">Sort: Top rated</option>
+        <option value="protein">Sort: Most protein</option>
+        <option value="low">Sort: Price low–high</option>
+        <option value="high">Sort: Price high–low</option>
+      </select>
+    </div>
+  </div>
+  <div class="cells cells--3" id="shop-grid"></div>
+  <div class="assure">
+    <div><span class="label">01</span><b>Free shipping</b><p>On orders over ₹999. Dispatched within a day.</p></div>
+    <div><span class="label">02</span><b>Rolled weekly</b><p>Small batches, no preservatives.</p></div>
+    <div><span class="label">03</span><b>First can guarantee</b><p>Not for you? Full refund, no questions.</p></div>
+  </div>
+</main>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
