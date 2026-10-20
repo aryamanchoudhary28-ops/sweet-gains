@@ -20,6 +20,11 @@
     const s = p.sizes.find((x) => x.label === size) || p.sizes[0];
     return Math.round(p.price * s.mult);
   };
+  const gaItem = (p, size, qty = 1) => ({
+    item_id: p.id, item_name: p.name, item_brand: 'Sweet Gains', item_category: p.category,
+    item_variant: size || p.sizes[0].label, price: unitPrice(p, size || p.sizes[0].label), quantity: qty,
+  });
+  const gaCart = () => cart.map((l) => { const p = findProduct(l.id); return p && gaItem(p, l.size, l.qty); }).filter(Boolean);
   const Cart = {
     items: () => cart,
     count: () => cart.reduce((a, l) => a + l.qty, 0),
@@ -33,9 +38,15 @@
       const line = cart.find((l) => lineKey(l.id, l.size) === lineKey(id, size));
       line ? (line.qty += qty) : cart.push({ id, size, qty });
       this.save();
+      track('add_to_cart', { value: unitPrice(p, size) * qty, items: [gaItem(p, size, qty)] });
       toast(`<span class="label">Added</span><span>${p.name}, ${size}</span>`);
     },
     setQty(key, qty) {
+      const old = cart.find((l) => lineKey(l.id, l.size) === key);
+      if (old && qty < old.qty) {
+        const p = findProduct(old.id), n = old.qty - qty;
+        if (p) track('remove_from_cart', { value: unitPrice(p, old.size) * n, items: [gaItem(p, old.size, n)] });
+      }
       cart = cart.map((l) => (lineKey(l.id, l.size) === key ? { ...l, qty } : l)).filter((l) => l.qty > 0);
       this.save();
     },
@@ -85,7 +96,7 @@
         <div class="footer-news">
           <h4>Newsletter</h4>
           <p>New flavours and restocks, about twice a month.</p>
-          <form class="newsletter" onsubmit="event.preventDefault(); this.outerHTML='<p class=&quot;newsletter__ok label&quot;>Subscribed. Your code is on its way.</p>'">
+          <form class="newsletter" onsubmit="event.preventDefault(); track('generate_lead', { method: 'newsletter' }); this.outerHTML='<p class=&quot;newsletter__ok label&quot;>Subscribed. Your code is on its way.</p>'">
             <input type="email" required placeholder="Email address" aria-label="Email address">
             <button>Sign up</button>
           </form>
@@ -119,7 +130,7 @@
 
   // drawer
   const drawer = $('.drawer'), scrim = $('.drawer-scrim');
-  const openDrawer = () => { drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false'); scrim.hidden = false; document.body.classList.add('no-scroll'); };
+  const openDrawer = () => { track('view_cart', { value: Cart.subtotal(), items: gaCart() }); drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false'); scrim.hidden = false; document.body.classList.add('no-scroll'); };
   const closeDrawer = () => { drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true'); scrim.hidden = true; document.body.classList.remove('no-scroll'); };
   $('.cart-btn').addEventListener('click', openDrawer);
   $('.drawer__close').addEventListener('click', closeDrawer);
@@ -205,6 +216,11 @@
     </article>`;
   }
   document.addEventListener('click', (e) => {
+    const link = e.target.closest('.cell a[href^="product.html"]');
+    if (link) {
+      const p = findProduct(new URL(link.href).searchParams.get('id'));
+      if (p) track('select_item', { item_list_name: listName, items: [gaItem(p)] });
+    }
     const b = e.target.closest('[data-add]');
     if (b) { e.preventDefault(); Cart.add(b.dataset.add); }
   });
@@ -216,10 +232,18 @@
     <div><dt>Weight</dt><dd>50g</dd></div>
   </dl>`;
 
+  let listName = page;
+  const viewList = (name, list) => {
+    listName = name;
+    track('view_item_list', { item_list_name: name, items: list.map((p, i) => ({ ...gaItem(p), index: i })) });
+  };
+
   /* ======================= pages ======================= */
   const pages = {
     home() {
-      $('#bestsellers').innerHTML = PRODUCTS.filter((p) => p.category === 'flavours').map(cell).join('');
+      const list = PRODUCTS.filter((p) => p.category === 'flavours');
+      $('#bestsellers').innerHTML = list.map(cell).join('');
+      viewList('Home: the range', list);
     },
 
     shop() {
@@ -233,6 +257,7 @@
         if (sort === 'rating') list = [...list].sort((a, b) => b.rating - a.rating);
         if (sort === 'protein') list = [...list].sort((a, b) => b.protein - a.protein);
         grid.innerHTML = list.map(cell).join('');
+        viewList('Shop: ' + filter, list);
         count.textContent = `${pad(list.length)} items`;
         $$('.chips button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.c === filter));
       };
@@ -251,6 +276,7 @@
       const idx = PRODUCTS.indexOf(p);
       document.title = `${p.name} | Sweet Gains`;
       let size = p.sizes[0].label, qty = 1;
+      track('view_item', { value: p.price, items: [gaItem(p)] });
       $('#pdp').innerHTML = `
         <nav class="crumbs label"><a href="index.html">Home</a><span>/</span><a href="shop.html">Shop</a><span>/</span><span>${p.name}</span></nav>
         <div class="pdp">
@@ -328,6 +354,11 @@
     checkout() {
       let discount = 0, code = '';
       const sum = $('#summary');
+      const totals = () => {
+        const sub = Cart.subtotal(), ship = sub >= FREE_SHIP ? 0 : 79, off = Math.round(sub * discount);
+        return { sub, ship, off, total: sub - off + ship };
+      };
+      if (Cart.count()) track('begin_checkout', { value: Cart.subtotal(), items: gaCart() });
       const draw = () => {
         const sub = Cart.subtotal();
         if (!Cart.count()) {
@@ -370,6 +401,9 @@
         if (!f.reportValidity()) return;
         const name = f.elements.fname.value.trim().replace(/[<>&"]/g, '');
         const order = 'SG-' + Math.floor(100000 + Math.random() * 900000);
+        const t = totals(), items = gaCart();
+        track('add_payment_info', { value: t.total, payment_type: f.elements.pay.value, items });
+        track('purchase', { transaction_id: order, value: t.total, shipping: t.ship, ...(discount ? { coupon: code } : {}), items });
         Cart.clear();
         $('.checkout').innerHTML = `<div class="confirm">
           <span class="label">Order ${order}</span>
